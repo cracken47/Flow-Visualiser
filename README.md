@@ -10,7 +10,7 @@ A powerful debugging and visualization tool for Kotlin Flow, StateFlow, LiveData
   - StateFlow
   - LiveData
 - Visual tracking of active streams and event history
-- Easy integration with extension functions
+- Easy integration with zero code changes
 - Automatic code scanning to detect reactive streams in your codebase
 - Integration with Android Studio for debugging
 - Comprehensive test suite
@@ -38,51 +38,14 @@ git clone https://github.com/cracken47/Flow-Visualiser.git
 
 ## Usage
 
-### Flow Tracking
+The Flow Visualizer automatically detects and visualizes your reactive streams with **zero code modifications**. Simply integrate the library with your app and run it:
 
-```kotlin
-// Import the extension
-import com.flow.visualiser.core.trackFlow
+- All Kotlin Flow instances are automatically detected and tracked
+- All StateFlow instances are automatically detected and tracked
+- All LiveData instances are automatically detected and tracked
+- Other reactive streams are automatically detected and tracked
 
-// Use it in your code
-viewModel.dataFlow
-    .trackFlow("User Data Flow")
-    .collect { data ->
-        // Process the data as usual
-    }
-```
-
-### StateFlow Tracking
-
-```kotlin
-// Import the extension
-import com.flow.visualiser.core.trackStateFlow
-
-// Use it in a ViewModel
-private val _uiState = MutableStateFlow(UiState())
-val uiState = _uiState.trackStateFlow("UI State")
-```
-
-### LiveData Tracking
-
-```kotlin
-// Import the extension
-import com.flow.visualiser.core.trackLiveData
-
-// Use it in a ViewModel
-private val _userData = MutableLiveData<User>()
-val userData = _userData.trackLiveData("User Data") 
-```
-
-### Tracking Flow Operators
-
-```kotlin
-myFlow
-    .map { it * 2 }
-    .trackOperator("After map transformation")
-    .filter { it > 10 }
-    .collect { ... }
-```
+You don't need to add any special imports, annotations, or tracking functions. The visualizer works by scanning your codebase and instrumenting the reactive streams at runtime.
 
 ## Example Screens
 
