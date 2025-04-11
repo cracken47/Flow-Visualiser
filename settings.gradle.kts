@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Flow Visualiser"
-include(":app")
- 
+include(":app") 

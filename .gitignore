@@ -57,3 +57,14 @@ vcs.xml
 # Misc
 .DS_Store
 Thumbs.db
+
+# Maven publishing
+maven-upload/flow-visualiser-*.aar
+maven-upload/maven-bundle/
+maven-upload/maven-central-bundle.zip
+maven-upload/test-file.txt*
+
+# GPG Key info
+secring.gpg
+*.gpg
+*.asc

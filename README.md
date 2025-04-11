@@ -29,6 +29,28 @@ A powerful debugging and visualization tool for Kotlin Flow, StateFlow, LiveData
 
 ### Installation
 
+#### Option 1: Using Maven Central (Recommended)
+
+Add the dependency to your app's build.gradle file:
+
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("io.github.cracken47:flow-visualiser:1.0.0")
+}
+```
+
+Or in Groovy:
+
+```groovy
+// build.gradle
+dependencies {
+    implementation 'io.github.cracken47:flow-visualiser:1.0.0'
+}
+```
+
+#### Option 2: Clone Repository
+
 1. Clone this repository:
 ```bash
 git clone https://github.com/cracken47/Flow-Visualiser.git
@@ -58,6 +80,10 @@ The app provides several example screens:
    - Flow transformations
    - Flow combinations (zip, combine, merge)
    - Error handling
+
+## Maven Central Publishing
+
+The library is published on Maven Central. For information about the publishing process, see the [maven-upload](maven-upload) directory.
 
 ## License
 
