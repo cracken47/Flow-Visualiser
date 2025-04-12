@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 /**
  * Screen with various reactive stream examples for demonstration purposes

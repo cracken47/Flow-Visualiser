@@ -38,6 +38,9 @@ class FlowVisualizerViewModel : ViewModel() {
     private val _showLiveDataEvents = MutableStateFlow(true)
     val showLiveDataEvents: StateFlow<Boolean> = _showLiveDataEvents.asStateFlow()
     
+    private val _showOperatorEvents = MutableStateFlow(true)
+    val showOperatorEvents: StateFlow<Boolean> = _showOperatorEvents.asStateFlow()
+    
     // Track active streams
     private val _activeStreams = MutableStateFlow<Set<String>>(emptySet())
     val activeStreams: StateFlow<Set<String>> = _activeStreams.asStateFlow()
@@ -72,6 +75,7 @@ class FlowVisualizerViewModel : ViewModel() {
             StreamType.RX_OBSERVABLE -> "#FF9800" // Orange
             StreamType.RX_SUBJECT -> "#F44336" // Red
             StreamType.CHANNEL -> "#795548" // Brown
+            StreamType.OPERATOR -> "#607D8B" // Blue Grey
         }
         
         val eventUI = when (event) {
@@ -155,6 +159,7 @@ class FlowVisualizerViewModel : ViewModel() {
             StreamType.FLOW -> _showFlowEvents.value = show
             StreamType.STATE_FLOW -> _showStateFlowEvents.value = show
             StreamType.LIVE_DATA -> _showLiveDataEvents.value = show
+            StreamType.OPERATOR -> _showOperatorEvents.value = show
             else -> {} // Not implemented yet
         }
     }
@@ -168,6 +173,7 @@ class FlowVisualizerViewModel : ViewModel() {
                 StreamType.FLOW -> showFlowEvents.value
                 StreamType.STATE_FLOW -> showStateFlowEvents.value
                 StreamType.LIVE_DATA -> showLiveDataEvents.value
+                StreamType.OPERATOR -> showOperatorEvents.value
                 else -> true // Show other types by default
             }
         }

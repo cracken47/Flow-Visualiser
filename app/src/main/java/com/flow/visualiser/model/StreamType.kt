@@ -9,5 +9,6 @@ enum class StreamType {
     LIVE_DATA,
     RX_OBSERVABLE,
     RX_SUBJECT,
-    CHANNEL
+    CHANNEL,
+    OPERATOR
 } 

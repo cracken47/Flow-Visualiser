@@ -63,7 +63,8 @@ dependencies {
     // ViewModel integration
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    
+    implementation(libs.androidx.fragment.ktx)
+
     // Testing dependencies
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

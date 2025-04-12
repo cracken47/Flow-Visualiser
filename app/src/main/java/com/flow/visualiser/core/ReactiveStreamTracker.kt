@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.flow.visualiser.model.FlowEvent
 import com.flow.visualiser.model.StreamType
+import com.flow.visualiser.plugin.FlowVisualizerConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import com.flow.visualiser.plugin.FlowVisualizerConfig
 
 /**
  * Core tracker for monitoring reactive streams (Flow, StateFlow, LiveData)
@@ -25,7 +25,7 @@ import com.flow.visualiser.plugin.FlowVisualizerConfig
 object ReactiveStreamTracker {
     
     // Coroutine scope for the tracker
-    private val trackerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    internal val trackerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     // This shared flow will receive all events from all tracked streams
     private val _eventFlow = MutableSharedFlow<FlowEvent<*>>(extraBufferCapacity = 100)
@@ -35,6 +35,9 @@ object ReactiveStreamTracker {
     
     // Track active LiveData observers to prevent memory leaks
     private val liveDataObservers = mutableMapOf<LiveData<*>, Observer<*>>()
+    
+    // Track MutableStateFlows to avoid garbage collection
+    private val mutableStateFlows = mutableMapOf<MutableStateFlow<*>, String>()
     
     // Configuration
     private var config: FlowVisualizerConfig = FlowVisualizerConfig.default()
@@ -59,14 +62,10 @@ object ReactiveStreamTracker {
     
     /**
      * Track a Flow by wrapping it in a monitoring flow
-     *
-     * @param flow The source flow to be tracked
-     * @param name Optional name for this flow for identification purposes
-     * @return A new flow that emits the same values but reports all events to the visualizer
      */
     fun <T> trackFlow(flow: Flow<T>, name: String = ""): Flow<T> {
         if (!isTrackingEnabled) {
-            return flow // Return original flow if tracking is disabled
+            return flow
         }
         
         val streamId = ++streamCounter
@@ -101,15 +100,51 @@ object ReactiveStreamTracker {
     }
     
     /**
+     * Track an operator in a flow chain
+     * This is useful for visualizing transformations within a flow pipeline
+     */
+    fun <T> trackOperator(flow: Flow<T>, operatorName: String): Flow<T> {
+        if (!isTrackingEnabled) {
+            return flow
+        }
+        
+        val streamId = ++streamCounter
+        val streamName = if (operatorName.isNotEmpty()) operatorName else "Operator-$streamId"
+        
+        return flow {
+            val startEvent = FlowEvent.Started<T>(streamName, StreamType.OPERATOR)
+            _eventFlow.emit(startEvent)
+            
+            flow
+                .onStart { /* Already handled above */ }
+                .catch { error ->
+                    val errorEvent = FlowEvent.Error<T>(error, streamName, StreamType.OPERATOR)
+                    _eventFlow.emit(errorEvent)
+                    throw error // Re-throw to preserve original flow semantics
+                }
+                .onCompletion { error ->
+                    if (error == null) {
+                        val completionEvent = FlowEvent.Completion<T>(streamName, StreamType.OPERATOR)
+                        _eventFlow.emit(completionEvent)
+                    } else {
+                        val cancelEvent = FlowEvent.Cancelled<T>(streamName, StreamType.OPERATOR)
+                        _eventFlow.emit(cancelEvent)
+                    }
+                }
+                .collect { value ->
+                    val emissionEvent = FlowEvent.Emission(value, streamName, StreamType.OPERATOR)
+                    _eventFlow.emit(emissionEvent)
+                    emit(value)
+                }
+        }
+    }
+    
+    /**
      * Track a StateFlow by wrapping it and monitoring its state changes
-     *
-     * @param stateFlow The source StateFlow to be tracked
-     * @param name Optional name for this StateFlow for identification purposes
-     * @return A new StateFlow that emits the same values but reports events to the visualizer
      */
     fun <T> trackStateFlow(stateFlow: StateFlow<T>, name: String = ""): StateFlow<T> {
         if (!isTrackingEnabled) {
-            return stateFlow // Return original StateFlow if tracking is disabled
+            return stateFlow
         }
         
         val streamId = ++streamCounter
@@ -146,11 +181,36 @@ object ReactiveStreamTracker {
     }
     
     /**
+     * Register a MutableStateFlow for tracking
+     */
+    fun <T> registerMutableStateFlow(flow: MutableStateFlow<T>, name: String = "") {
+        if (!isTrackingEnabled) return
+        
+        val streamId = ++streamCounter
+        val streamName = if (name.isNotEmpty()) name else "MutableStateFlow-$streamId"
+        
+        // Store reference to prevent garbage collection
+        mutableStateFlows[flow] = streamName
+        
+        // Emit initial state
+        trackerScope.launch {
+            val startEvent = FlowEvent.Started<T>(streamName, StreamType.STATE_FLOW)
+            _eventFlow.emit(startEvent)
+            
+            val initialValue = flow.value
+            val initialEvent = FlowEvent.Emission(initialValue, streamName, StreamType.STATE_FLOW)
+            _eventFlow.emit(initialEvent)
+            
+            // Collect from the flow to track changes
+            flow.collect { value ->
+                val emissionEvent = FlowEvent.Emission(value, streamName, StreamType.STATE_FLOW)
+                _eventFlow.emit(emissionEvent)
+            }
+        }
+    }
+    
+    /**
      * Track a LiveData by observing it and reporting value changes to the visualizer
-     *
-     * @param liveData The LiveData to track
-     * @param name Optional name for this LiveData
-     * @return The original LiveData (LiveData can't be wrapped like Flows)
      */
     fun <T> trackLiveData(liveData: LiveData<T>, name: String = ""): LiveData<T> {
         if (!isTrackingEnabled) {
@@ -215,5 +275,8 @@ object ReactiveStreamTracker {
             liveData.removeObserver(observer as Observer<Any?>)
         }
         liveDataObservers.clear()
+        
+        // Clear MutableStateFlow references
+        mutableStateFlows.clear()
     }
 } 

@@ -26,6 +26,21 @@
             </intent-filter>
         </activity>
         
+        <!-- Standalone Flow Visualiser Launcher -->
+        <activity
+            android:name=".FlowVisualiserLauncherActivity"
+            android:exported="true"
+            android:label="Flow Visualiser"
+            android:theme="@style/Theme.FlowVisualiser"
+            android:taskAffinity="com.flow.visualiser.launcher"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="com.flow.visualiser.LAUNCH_VISUALISER" />
+            </intent-filter>
+        </activity>
+        
         <service
             android:name=".plugin.FlowVisualizerNotificationService"
             android:enabled="true"
